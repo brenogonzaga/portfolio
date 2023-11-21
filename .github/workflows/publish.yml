@@ -1,0 +1,34 @@
+name: Publish
+on:
+  push:
+    branches: [master, main]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Setup Rust
+        uses: actions/checkout@v4
+      - name: Install WebAssembly target
+        run: rustup target add wasm32-unknown-unknown
+      - name: Install Trunk
+        run: cargo install --locked trunk
+      - name: Build
+        run: trunk build --release
+      - name: Publish to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: 49d9d8cbe8d94cbb1b78500d68ad69dc
+          projectName: brenogonzaga
+          directory: dist
+          wranglerVersion: '3'
+        id: publish
+      - name: Outputs
+        run: |
+          echo "ID: ${{ steps.publish.outputs.id }}"
+          echo "URL: ${{ steps.publish.outputs.url }}"
+          echo "Environment: ${{ steps.publish.outputs.environment }}"
+          echo "Alias: ${{ steps.publish.outputs.alias }}"
